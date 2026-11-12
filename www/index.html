@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آموزش کسرها</title>
+<style>
+body{margin:0;font-family:sans-serif;background:#f3f6fb;color:#222}
+header{background:#3949ab;color:#fff;padding:12px;text-align:center}
+header h1{margin:0;font-size:22px}
+header small{display:block;margin-top:4px;font-size:14px;opacity:.9}
+main{max-width:640px;margin:auto;padding:12px}
+footer{text-align:center;padding:14px;color:#555;font-size:14px}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px #0002}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.row button,.row select{flex:1;padding:10px 4px;border:2px solid #3949ab;background:#fff;color:#3949ab;border-radius:8px;font-size:15px}
+.row button.on{background:#3949ab;color:#fff}
+.q{font-size:28px;text-align:center;padding:10px}
+.m{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.fr{display:inline-flex;flex-direction:column;align-items:stretch;text-align:center;vertical-align:middle;margin:0 5px;font-size:.85em;line-height:1.3}
+.fr i{font-style:normal;padding:0 6px;display:block}
+.fr i:first-child{border-bottom:2px solid currentColor;padding-bottom:1px}
+.fr i:last-child{padding-top:1px}
+input{width:100%;box-sizing:border-box;padding:12px;font-size:20px;direction:ltr;text-align:center;border:2px solid #aaa;border-radius:8px;margin-bottom:6px}
+.go{width:100%;padding:12px;font-size:17px;border:0;border-radius:8px;background:#43a047;color:#fff;margin-top:6px}
+.go.b{background:#3949ab}.go.o{background:#fb8c00}
+.ok{color:#2e7d32;font-weight:bold;font-size:18px}.no{color:#c62828;font-weight:bold;font-size:18px}
+.st{padding:8px 0;border-bottom:1px dashed #ccc;line-height:2.2}
+.fin{font-size:20px;font-weight:bold;color:#3949ab;padding-top:8px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧮 آموزش کسرها</h1>
+  <small>طراح: منوچهر کریمی</small>
+</header>
+<main>
+<div class="row">
+  <button id="tP" class="on">تمرین</button>
+  <button id="tC">ماشین‌حساب</button>
+</div>
+
+<div id="pP">
+  <div class="card">
+    <div class="row" id="ops">
+      <button data-v="+" class="on">جمع</button>
+      <button data-v="-">تفریق</button>
+      <button data-v="×">ضرب</button>
+      <button data-v="÷">تقسیم</button>
+    </div>
+    <div class="row" id="kinds">
+      <button data-v="same" class="on">مخرج مساوی</button>
+      <button data-v="diff">مخرج نامساوی</button>
+      <button data-v="mixed">عدد مخلوط</button>
+    </div>
+    <div class="q" id="q"></div>
+    <input id="ans" placeholder="جواب شما، مثل ۳/۴ یا ۲ ۱/۳">
+    <button class="go" id="chk">بررسی جواب</button>
+    <button class="go o" id="show">نمایش حل</button>
+    <button class="go b" id="nxt">سوال جدید</button>
+    <div style="text-align:center;margin-top:8px">درست: <b id="sc">۰</b> از <b id="tt">۰</b></div>
+  </div>
+</div>
+
+<div id="pC" class="hide">
+  <div class="card">
+    <input id="ca" placeholder="کسر اول، مثل ۳ ۱/۲">
+    <div class="row"><select id="co"><option value="+">جمع +</option><option value="-">تفریق −</option><option value="×">ضرب ×</option><option value="÷">تقسیم ÷</option></select></div>
+    <input id="cb" placeholder="کسر دوم، مثل ۵/۴">
+    <button class="go b" id="cg">حل کن</button>
+  </div>
+</div>
+
+<div class="card hide" id="outc"><div id="fb"></div><div id="out"></div></div>
+</main>
+<footer>طراح و برنامه‌نویس: منوچهر کریمی</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const gcd=(a,b)=>b?gcd(b,a%b):a, lcm=(a,b)=>a*b/gcd(a,b);
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+const fa=s=>String(s).replace(/[0-9]/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+function faDom(el){
+  const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+  let n;while(n=w.nextNode())n.nodeValue=fa(n.nodeValue);
+}
+function setH(el,h){el.innerHTML=h;faDom(el);}
+
+const fr=(n,d)=>`<span class="fr"><i>${n}</i><i>${d}</i></span>`;
+const E=h=>`<span class="m">${h}</span>`;
+const imp=o=>o.w*o.d+o.n;
+function M(o){return o.n?(o.w?o.w:'')+fr(o.n,o.d):''+o.w}
+function F(n,d){return M({w:Math.floor(n/d),n:n%d,d})}
+
+function bars(rows){
+  let y=0,s='';
+  rows.forEach(([n,d,c,t])=>{
+    const W=Math.max(1,Math.ceil(n/d)),bw=(300-(W-1)*8)/W,cw=bw/d;
+    s+=`<text x="0" y="${y+12}" font-size="13" fill="#333">${t}: ${n}/${d}</text>`;
+    for(let k=0;k<W;k++){
+      const f=Math.max(0,Math.min(d,n-k*d));
+      for(let i=0;i<d;i++)
+        s+=`<rect x="${k*(bw+8)+i*cw}" y="${y+18}" width="${cw}" height="24" fill="${i<f?c:'#fff'}" stroke="#555" stroke-width=".6"/>`;
+    }
+    y+=52;
+  });
+  return `<svg viewBox="0 0 300 ${y}" style="width:100%;direction:ltr">${s}</svg>`;
+}
+function grid(n1,d1,n2,d2){
+  const cs=Math.min(28,260/Math.max(d1,d2));let s='';
+  for(let c=0;c<d1;c++)for(let r=0;r<d2;r++){
+    const a=c<n1,b=r<n2;
+    s+=`<rect x="${c*cs}" y="${r*cs}" width="${cs}" height="${cs}" fill="${a&&b?'#ab47bc':a?'#90caf9':b?'#ffcc80':'#fff'}" stroke="#555" stroke-width=".6"/>`;
+  }
+  return `<svg viewBox="0 0 ${d1*cs} ${d2*cs}" style="display:block;margin:auto;max-width:300px;width:100%">${s}</svg>
+  <div class="st">🟦 آبی = ${E(fr(n1,d1))} (ستون‌ها) &nbsp; 🟧 نارنجی = ${E(fr(n2,d2))} (سطرها) &nbsp; 🟪 بنفش (محل برخورد) = حاصل‌ضرب</div>`;
+}
+
+function solve(a,b,op){
+  const S=[];
+  let n1=imp(a),d1=a.d,n2=imp(b),d2=b.d,rn,rd,vis;
+  if(a.w)S.push(`تبدیل عدد مخلوط اول به کسر: ${E(M(a)+' = '+fr(n1,d1))} (چون ${E(a.w+'×'+a.d+'+'+a.n+' = '+n1)})`);
+  if(b.w)S.push(`تبدیل عدد مخلوط دوم به کسر: ${E(M(b)+' = '+fr(n2,d2))} (چون ${E(b.w+'×'+b.d+'+'+b.n+' = '+n2)})`);
+  if(op==='+'||op==='-'){
+    let L=d1;const w=op==='+'?'جمع':'تفریق';
+    if(d1===d2)S.push(`مخرج‌ها برابرند (${d1}). پس فقط صورت‌ها را ${w} می‌کنیم و مخرج همان می‌ماند.`);
+    else{
+      L=lcm(d1,d2);const m1=L/d1,m2=L/d2;
+      S.push(`مخرج‌ها نابرابرند. اول باید مخرج‌ها را یکی کنیم. ک.م.م ${d1} و ${d2} برابر ${L} است.`);
+      S.push(`کسر اول را در ${m1} ضرب می‌کنیم: ${E(fr(n1,d1)+' = '+fr(n1*m1,L))}`);
+      S.push(`کسر دوم را در ${m2} ضرب می‌کنیم: ${E(fr(n2,d2)+' = '+fr(n2*m2,L))}`);
+      n1*=m1;n2*=m2;
+    }
+    rn=op==='+'?n1+n2:n1-n2;rd=L;
+    S.push(`${w} صورت‌ها: ${E(fr(n1,L)+' '+(op==='+'?'+':'−')+' '+fr(n2,L)+' = '+fr(rn,rd))}`);
+    vis=bars([[n1,L,'#42a5f5','کسر اول'],[n2,L,'#ffa726','کسر دوم'],[rn,rd,'#66bb6a','حاصل']]);
+  }else if(op==='×'){
+    rn=n1*n2;rd=d1*d2;
+    S.push(`در ضرب، صورت در صورت و مخرج در مخرج ضرب می‌شود (مخرج مشترک لازم نیست): ${E(fr(n1,d1)+' × '+fr(n2,d2)+' = '+fr(n1+'×'+n2,d1+'×'+d2)+' = '+fr(rn,rd))}`);
+    vis=(!a.w&&!b.w)?grid(n1,d1,n2,d2):bars([[n1,d1,'#42a5f5','کسر اول'],[n2,d2,'#ffa726','کسر دوم'],[rn,rd,'#66bb6a','حاصل']]);
+  }else{
+    S.push(`تقسیم یعنی ضرب در وارونه کسر دوم. وارونه ${E(fr(n2,d2))} می‌شود ${E(fr(d2,n2))}.`);
+    rn=n1*d2;rd=d1*n2;
+    S.push(`${E(fr(n1,d1)+' ÷ '+fr(n2,d2)+' = '+fr(n1,d1)+' × '+fr(d2,n2)+' = '+fr(rn,rd))}`);
+    S.push('معنی تقسیم: ببینیم کسر دوم چند بار در کسر اول جا می‌شود.');
+  }
+  const g=gcd(rn,rd),sn=rn/g,sd=rd/g;
+  if(g>1)S.push(`ساده کردن: صورت و مخرج را بر ${g} تقسیم می‌کنیم: ${E(fr(rn,rd)+' = '+fr(sn,sd))}`);
+  if(sd>1&&sn>sd)S.push(`تبدیل به عدد مخلوط: ${E(sn+' ÷ '+sd)} برابر ${Math.floor(sn/sd)} با باقی‌مانده ${sn%sd} است، پس ${E(fr(sn,sd)+' = '+F(sn,sd))}`);
+  if(op==='÷')vis=bars([[n1,d1,'#42a5f5','کسر اول'],[n2,d2,'#ffa726','کسر دوم'],[sn,sd,'#66bb6a','حاصل']]);
+  const html=S.map(t=>`<div class="st">${t}</div>`).join('')+`<div class="fin">✅ جواب نهایی: ${E(F(sn,sd))}</div><div style="margin-top:10px">${vis}</div>`;
+  return {html,sn,sd};
+}
+
+function parse(s){
+  s=s.replace(/[۰-۹]/g,c=>c.charCodeAt(0)-1776).replace(/[٠-٩]/g,c=>c.charCodeAt(0)-1632);
+  const m=/^\s*(\d+)?\s*(?:(\d+)\s*\/\s*(\d+))?\s*$/.exec(s);
+  if(!m||(!m[1]&&!m[2]))return null;
+  const d=m[3]?+m[3]:1;if(!d)return null;
+  return {w:+m[1]||0,n:+m[2]||0,d};
+}
+
+let op='+',kind='same',cur,sc=0,tt=0,answered=false;
+function gen(){
+  let a,b;
+  if(kind==='same'){const d=rnd(3,12);a={w:0,n:rnd(1,d-1),d};b={w:0,n:rnd(1,d-1),d};}
+  else{
+    const d1=rnd(2,9);let d2;do{d2=rnd(2,9)}while(d2===d1);const w=kind==='mixed';
+    a={w:w?rnd(1,4):0,n:rnd(1,d1-1),d:d1};b={w:w?rnd(1,4):0,n:rnd(1,d2-1),d:d2};
+  }
+  if(op==='-'&&imp(a)*b.d<imp(b)*a.d)[a,b]=[b,a];
+  return {a,b};
+}
+function newQ(){
+  cur=gen();answered=false;
+  setH($('q'),E(M(cur.a)+' '+(op==='-'?'−':op)+' '+M(cur.b)+' = ?'));
+  $('ans').value='';$('outc').classList.add('hide');
+}
+function showOut(html,fb){setH($('fb'),fb||'');setH($('out'),html);$('outc').classList.remove('hide');}
+
+function group(id,cb){
+  $(id).onclick=e=>{
+    const b=e.target.closest('button');if(!b)return;
+    [...$(id).children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    cb(b.dataset.v);newQ();
+  };
+}
+group('ops',v=>op=v);group('kinds',v=>kind=v);
+$('nxt').onclick=newQ;
+$('show').onclick=()=>{const r=solve(cur.a,cur.b,op);showOut(r.html);};
+$('chk').onclick=()=>{
+  const u=parse($('ans').value);
+  if(!u){alert('جواب را به شکل ۳/۴ یا ۲ ۱/۳ بنویسید');return;}
+  const r=solve(cur.a,cur.b,op),ok=imp(u)*r.sd===r.sn*u.d;
+  if(!answered){tt++;if(ok)sc++;answered=true;$('sc').textContent=fa(sc);$('tt').textContent=fa(tt);}
+  showOut(r.html,ok?'<div class="ok">🎉 آفرین! درست است.</div>':'<div class="no">❌ درست نیست. حل را ببینید:</div>');
+};
+
+$('tP').onclick=()=>{$('pP').classList.remove('hide');$('pC').classList.add('hide');$('tP').classList.add('on');$('tC').classList.remove('on');$('outc').classList.add('hide');};
+$('tC').onclick=()=>{$('pC').classList.remove('hide');$('pP').classList.add('hide');$('tC').classList.add('on');$('tP').classList.remove('on');$('outc').classList.add('hide');};
+$('cg').onclick=()=>{
+  const a=parse($('ca').value),b=parse($('cb').value),o=$('co').value;
+  if(!a||!b){alert('کسرها را درست وارد کنید. مثل ۳/۴ یا ۲ ۱/۳');return;}
+  if(o==='÷'&&imp(b)===0){alert('تقسیم بر صفر ممکن نیست');return;}
+  showOut(solve(a,b,o).html);
+};
+newQ();
+</script>
+</body>
+</html>
